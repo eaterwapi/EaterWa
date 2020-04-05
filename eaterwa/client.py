@@ -191,6 +191,7 @@ class EaterWa(object):
     @loggedIn
     def mentionAll(self, message):
         to = message['chatId']
+        myId = self.getMe().json()['id']['_serialized']
         if message['chat']['isGroup']:
             result = '╭───「 Mention Members 」\n'
             no = 0
