@@ -1,4 +1,6 @@
 from eaterwa import *
+import requests
+import json
 
 myId = '6287859909669@c.us'
 
