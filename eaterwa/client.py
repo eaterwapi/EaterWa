@@ -194,7 +194,7 @@ class EaterWa(object):
         if message['chat']['isGroup']:
             result = '╭───「 Mention Members 」\n'
             no = 0
-            members = self.getGroupParticipantsIds(message['chatId'])['result']
+            members = self.getGroupParticipantsIds(message['chatId']).json()['result']
             if myId in members:
                 members.remove(myId)
             for member in members:
