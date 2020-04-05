@@ -24,7 +24,7 @@ def process_message(cmd, text, txt, to, sender, message, msg_id):
     elif txt == 'status':
         wa.sendReply(msg_id, 'Alive Gan')
     elif txt == 'battery':
-        battery = wa.getBatteryLevel()
+        battery = wa.getBatteryLevel().json()
         wa.sendMessage(to, battery['result'])
     elif txt == 'me':
         nomer = sender.replace('@c.us','')
