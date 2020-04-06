@@ -13,7 +13,8 @@ settings = {
 wa = EaterWa(auth)
 wa.login()
 
-myId = wa.getMe()['me']['_serialized']
+profile = wa.getMe().json()
+myId = profile['me']
 
 def process_message(cmd, text, txt, to, sender, message, msg_id):
     if txt == 'tag':
