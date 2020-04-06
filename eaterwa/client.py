@@ -185,7 +185,7 @@ class EaterWa(object):
     @loggedIn
     def revoke(self):
         url = self.host + '/revoke'
-        req = self.getContent(url)
+        req = self.getContent(url, params=self.headers)
         return req
 
     @loggedIn
