@@ -40,7 +40,7 @@ class EaterWa(object):
 
         if callback.json()['result'] == 'LoggedIn':
             self.isLogin = True
-            print('Login success :', self.getMe().json()['me']['_serialized'])
+            print('Login success :', self.getMe().json()['me'])
             return True
         else:
             self.isLogin = False
@@ -246,7 +246,7 @@ class EaterWa(object):
     @loggedIn
     def mentionAll(self, message):
         to = message['chatId']
-        myId = self.getMe().json()['me']['_serialized']
+        myId = self.getMe().json()['me']
         if message['chat']['isGroup']:
             result = '╭───「 Mention Members 」\n'
             no = 0
