@@ -1,5 +1,8 @@
 from eaterwa import *
 
+import requests
+import json
+
 auth = {
     'apikey': 'your apikey',
     'userid': 'your userid',
