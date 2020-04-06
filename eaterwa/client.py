@@ -28,7 +28,8 @@ class EaterWa(object):
             raise Exception('Invalid Authentication !!!')
 
     def login(self):
-        self.getClient()
+        if self.getClient().json()['status'] == 406:
+            raise Exception('Invalid Headers !!!')
         qr = self.getQr().json()
         try:
             print('Scan this QR : ', qr['result']['qr-callback'])
@@ -39,7 +40,7 @@ class EaterWa(object):
 
         if callback.json()['result'] == 'LoggedIn':
             self.isLogin = True
-            print('Login success :', self.getMe().json()['id']['_serialized'])
+            print('Login success :', self.getMe().json()['me']['_serialized'])
             return True
         else:
             self.isLogin = False
@@ -92,13 +93,61 @@ class EaterWa(object):
         return req
 
     @loggedIn
+    def getContacts(self):
+        url = self.host + '/getContacts'
+        a = self.getContent(url)
+        return a
+
+    @loggedIn
+    def getMyContacts(self):
+        url = self.host + '/getMyContacts'
+        a = self.getContent(url)
+        return a
+
+    @loggedIn
+    def getWaVersion(self):
+        url = self.host + '/getWaVersion'
+        a = self.getContent(url)
+        return a
+
+    @loggedIn
+    def getGroupLink(self, to):
+        url = self.host + '/getGroupLink'
+        data = {
+            'chat_id': to
+        }
+        a = self.postContent(url, data=data)
+        return a
+
+    @loggedIn
+    def revokeGroupLink(self, to):
+        url = self.host + '/revokeGroupLink'
+        data = {
+            'chat_id': to
+        }
+        a = self.postContent(url, data=data)
+        return a
+
+    @loggedIn
+    def simulateTyping(self, to, on):
+        url = self.host + '/simulateTyping'
+        data = {
+            'chat_id': to,
+            'on': on
+        }
+        a = self.postContent(url, data=data)
+        return a
+
+    @loggedIn
     def sendMessage(self, to, text):
         url = self.host + '/sendMessage'
         data = {
             'chat_id': to,
             'message': text
         }
+        self.simulateTyping(to, True)
         req = self.postContent(url, data=data)
+        self.simulateTyping(to, False)
         return req
 
     @loggedIn
@@ -109,7 +158,9 @@ class EaterWa(object):
             'message': text,
             'metadata': str(metadata)
         }
+        self.simulateTyping(to, True)
         req = self.postContent(url, data=data)
+        self.simulateTyping(to, False)
         return req
 
     @loggedIn
@@ -120,7 +171,9 @@ class EaterWa(object):
             'message': text,
             'user_ids': userids
         }
+        self.simulateTyping(to, True)
         req = self.postContent(url, data=data)
+        self.simulateTyping(to, False)
         return req
 
     @loggedIn
@@ -164,7 +217,9 @@ class EaterWa(object):
             'message_id': message_id,
             'message': text
         }
+        self.simulateTyping(to, True)
         req = self.postContent(url, data=data)
+        self.simulateTyping(to, False)
         return req
 
     @loggedIn
@@ -191,7 +246,7 @@ class EaterWa(object):
     @loggedIn
     def mentionAll(self, message):
         to = message['chatId']
-        myId = self.getMe().json()['id']['_serialized']
+        myId = self.getMe().json()['me']['_serialized']
         if message['chat']['isGroup']:
             result = '╭───「 Mention Members 」\n'
             no = 0
