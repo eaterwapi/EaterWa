@@ -41,7 +41,7 @@ class EaterWa(object):
         if callback.json()['result'] == 'LoggedIn':
             self.isLogin = True
             profile = self.getMe().json()
-            res = 'Login success : '
+            res = 'Login success !!!'
             res += '\nName : {} '.format(profile['pushname'])
             res += '\nWId : {}'.format(profile['me'])
             res += '\nBattery : {}'.format(profile['battery'])
@@ -202,6 +202,16 @@ class EaterWa(object):
         }
         files ={'files': open(path,'rb')}
         req = self.postContent(url, data=data, files=files)
+        return req
+
+    @loggedIn
+    def sendContact(self, to, user_id):
+        url = self.host + '/sendContact'
+        data = {
+            'chat_id': to,
+            'user_id': user_id
+        }
+        req = self.postContent(url, data=data)
         return req
 
     @loggedIn
