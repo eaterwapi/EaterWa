@@ -40,7 +40,17 @@ class EaterWa(object):
 
         if callback.json()['result'] == 'LoggedIn':
             self.isLogin = True
-            print('Login success :', self.getMe().json()['me'])
+            profile = self.getMe().json()
+            res = 'Login success : '
+            res += '\nName : {} '.format(profile['pushname'])
+            res += '\nWId : {}'.format(profile['me'])
+            res += '\nBattery : {}'.format(profile['battery'])
+            res += '\n========================'
+            res += '\nPhone Name : {}'.format(profile['phone']['device_manufacturer'])
+            res += '\nPhone model : {}'.format(profile['phone']['device_model'])
+            res += '\nPhone OS Version : {}'.format(profile['phone']['os_version'])
+            res += '\nWhatsapp Version : {}'.format(profile['phone']['wa_version'])
+            print(res)
             return True
         else:
             self.isLogin = False
