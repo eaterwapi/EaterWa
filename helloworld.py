@@ -1,7 +1,9 @@
 from eaterwa import *
 
-import requests
+import re
 import json
+import requests
+import time
 
 auth = {
     'apikey': 'your apikey',
@@ -15,8 +17,10 @@ settings = {
 
 wa = EaterWa(auth)
 wa.login()
-
 profile = wa.getMe().json()
+
+start = time.time()
+
 myId = profile['me']
 
 def process_message(cmd, text, txt, to, sender, message, msg_id):
@@ -38,6 +42,7 @@ def process_message(cmd, text, txt, to, sender, message, msg_id):
       if sender == myId:
         wa.sendMessage(to, 'revoked!!!')
         wa.revoke()
+        sys.exit(0)
     elif txt.startswith("topik_alquran: "):
         sep = text.split(" ")
         textnya = text.replace(sep[0] + " ","")
@@ -109,42 +114,45 @@ def check_m(include_me=True, include_notifications=True):
             else:
                 for contact in unread.json()['result']:
                     for message in contact['messages']:
-                        try:
-                            cont = str(message['content'][0:25])
-                        except:
-                            cont = 'None'
-                        print('new message - {} from {} message {}...'.format(str(message['type']), str(message['sender']['formattedName']), cont))
-                        try:
-                            sender_id = message['sender']['id']
-                        except:
-                            sender_id = "None"
-                        try:
-                            chat_id = message['chatId']
-                        except:
-                            chat_id = sender_id
-
-                        if settings['autoRead']:
-                            wa.sendSeen(to)
-                            
-                        if message['subtype'] == 'invite' or message['subtype'] == 'add':
-                            if myId in message['recipients']:
-                                wa.sendMention(to, 'Hello @{} Thanks for invited me'.format(message['author'].replace('@c.us','')), [message['author']])
-                            else:
-                                for recipient in message['recipients']:
-                                    wa.sendMention(to, 'Halo @{} Selamat datang di {}'.format(recipient.replace('@c.us',''),message['chat']['contact']['name']), [recipient])
-
-                        if message['type'] == 'chat':
-                            text = message['content']
-                            txt  = text.lower()
-                            cmd  = text.lower()
-                            to   = chat_id
-                            sender = sender_id
-                            msg_id = message['id']
-
+                        if message['timestamp'] < start:
+                            continue
+                        else:
                             try:
-                                process_message(cmd, text, txt, to, sender, message, msg_id)
-                            except Exception as e:
-                                print('Error :', e)
+                                cont = str(message['content'][0:25])
+                            except:
+                                cont = 'None'
+                            print('new message - {} from {} message {}...'.format(str(message['type']), str(message['sender']['formattedName']), cont))
+                            try:
+                                sender_id = message['sender']['id']
+                            except:
+                                sender_id = "None"
+                            try:
+                                chat_id = message['chatId']
+                            except:
+                                chat_id = sender_id
+
+                            if settings['autoRead']:
+                                wa.sendSeen(to)
+                                
+                            if message['subtype'] == 'invite' or message['subtype'] == 'add':
+                                if myId in message['recipients']:
+                                    wa.sendMention(to, 'Hello @{} Thanks for invited me'.format(message['author'].replace('@c.us','')), [message['author']])
+                                else:
+                                    for recipient in message['recipients']:
+                                        wa.sendMention(to, 'Halo @{} Selamat datang di {}'.format(recipient.replace('@c.us',''),message['chat']['contact']['name']), [recipient])
+
+                            if message['type'] == 'chat':
+                                text = message['content']
+                                txt  = text.lower()
+                                cmd  = text.lower()
+                                to   = chat_id
+                                sender = sender_id
+                                msg_id = message['id']
+
+                                try:
+                                    process_message(cmd, text, txt, to, sender, message, msg_id)
+                                except Exception as e:
+                                    print('Error :', e)
         except Exception as e:
             print('Error :', e)
             sys.exit('Good Bye!!')
