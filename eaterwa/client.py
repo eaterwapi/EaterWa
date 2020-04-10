@@ -36,7 +36,10 @@ class EaterWa(object):
         except:
             print('Trying to login...')
 
-        callback = self.getContent(qr['result']['callback'])
+        try:
+            callback = self.getContent(qr['result']['callback'])
+        except:
+            raise Exception('Check your connection on your android or run again this program')
 
         if callback.json()['result'] == 'LoggedIn':
             self.isLogin = True
@@ -215,6 +218,17 @@ class EaterWa(object):
         return req
 
     @loggedIn
+    def sendVcard(self, to, displayName, vcard):
+        url = self.host + '/sendVCard'
+        data = {
+            'chat_id': to,
+            'displayName': displayName,
+            'vcard': vcard
+        }
+        req = self.postContent(url, data=data)
+        return req
+
+    @loggedIn
     def sendMediaWithURL(self, to, url, filename, caption='', metadata={}):
         path = self.downloadFileWithURL(url, filename)
         r = self.sendMedia(to, path, caption, metadata)
@@ -237,9 +251,7 @@ class EaterWa(object):
             'message_id': message_id,
             'message': text
         }
-        self.simulateTyping(to, True)
         req = self.postContent(url, data=data)
-        self.simulateTyping(to, False)
         return req
 
     @loggedIn
