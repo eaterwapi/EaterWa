@@ -4,6 +4,7 @@ import re
 import json
 import requests
 import time
+import traceback
 import sys
 
 auth = {
@@ -36,7 +37,12 @@ def process_message(cmd, text, txt, to, sender, message, msg_id):
     elif txt == 'me':
         nomer = sender.replace('@c.us','')
         wa.sendMention(to, '@' + nomer, [sender])
-        wa.sendContact(to, sender)
+        try:
+            wa.sendContact(to, sender).json()
+        except:
+            try:name = str(message['sender']['formattedName'])
+            except:name = "Hai Sayang <3"
+            wa.sendVcard(to, name, "BEGIN:VCARD\nVERSION:3.0\nN:;{};;;\nFN:{}\nTEL;type=CELL;waid={}:{}\nEND:VCARD".format(name, name, nomer, nomer))
     elif txt == 'author pict':
         wa.sendMediaWithURL(to, 'https://i.ibb.co/dBsw1Xf/photo-2019-10-28-18-07-44.jpg', 'pict.jpg', caption='Test test')
     elif txt == 'revoke login':
@@ -105,56 +111,88 @@ def process_message(cmd, text, txt, to, sender, message, msg_id):
             settings['autoRead'] = False
             wa.sendMessage(to, 'Berhasil menonaktifkan autoread')
 
-def check_m(include_me=True, include_notifications=True):
-    
-    while True:
-        unread = wa.getUnread()
+def fetch():
+    try:
+        unread = wa.getUnread().json()
         try:
-            if unread.json()['result'] == []:
-                pass
+            if unread['result'] == []:
+                return []
             else:
-                for contact in unread.json()['result']:
-                    for message in contact['messages']:
-                        if message['timestamp'] < start:
-                            continue
-                        else:
-                            try:
-                                cont = str(message['content'][0:25])
-                            except:
-                                cont = 'None'
-                            print('new message - {} from {} message {}...'.format(str(message['type']), str(message['sender']['formattedName']), cont))
-                            try:
-                                sender_id = message['sender']['id']
-                            except:
-                                sender_id = "None"
-                            try:
-                                chat_id = message['chatId']
-                            except:
-                                chat_id = sender_id
-
-                            if settings['autoRead']:
-                                wa.sendSeen(to)
-                                
-                            if message['subtype'] == 'invite' or message['subtype'] == 'add':
-                                if myId in message['recipients']:
-                                    wa.sendMention(to, 'Hello @{} Thanks for invited me'.format(message['author'].replace('@c.us','')), [message['author']])
-                                else:
-                                    for recipient in message['recipients']:
-                                        wa.sendMention(to, 'Halo @{} Selamat datang di {}'.format(recipient.replace('@c.us',''),message['chat']['contact']['name']), [recipient])
-
-                            if message['type'] == 'chat':
-                                text = message['content']
-                                txt  = text.lower()
-                                cmd  = text.lower()
-                                to   = chat_id
-                                sender = sender_id
-                                msg_id = message['id']
-
-                                try:
-                                    process_message(cmd, text, txt, to, sender, message, msg_id)
-                                except Exception as e:
-                                    print('Error :', e)
+                try:
+                    for contact in unread['result']:
+                        try:
+                            for message in contact['messages']:
+                                return message
+                        except Exception as e:
+                            print('Error : ' + str(e))
+                            print(traceback.format_exc())
+                            return []
+                except Exception as e:
+                    print('Error : ' + str(e))
+                    print(traceback.format_exc())
+                    return []
         except Exception as e:
-            print('Error :', e)
-            sys.exit('Good Bye!!')
-check_m()
+            print('Error : ' + str(e))
+            print(traceback.format_exc())
+            return []
+    except Exception as e:
+        print('Error : ' + str(e))
+        print(traceback.format_exc())
+        sys.exit('Bye!!')
+        return []
+
+def check_m():
+    
+    try:
+        message = fetch()
+        if not message: return
+        try: timestamp =  message['timestamp'];
+        except: timestamp = message['t']
+        if timestamp < start: return
+        try:cont = str(message['content'][0:25])
+        except:cont = 'None'
+        try:chatname = str(message['sender']['formattedName'])
+        except:chatname = 'None'
+        try:ctype = str(message['type'])
+        except:ctype = 'None'
+        print('new message - {} from {} message {}...'.format(ctype, chatname, cont))
+        try:
+            sender_id = message['sender']['id']
+        except:
+            sender_id = "None"
+        try:
+            chat_id = message['chatId']
+        except:
+            chat_id = sender_id
+
+        if settings['autoRead']:
+            wa.sendSeen(chat_id)
+            
+        if message['subtype'] == 'invite' or message['subtype'] == 'add':
+            if myId in message['recipients']:
+                wa.sendMention(chat_id, 'Hello @{} Thanks for invited me'.format(message['author'].replace('@c.us','')), [message['author']])
+            else:
+                for recipient in message['recipients']:
+                    wa.sendMention(chat_id, 'Halo @{} Selamat datang di {}'.format(recipient.replace('@c.us',''),message['chat']['contact']['name']), [recipient])
+
+        if message['type'] == 'chat':
+            text = message['content']
+            txt  = text.lower()
+            cmd  = text.lower()
+            to   = chat_id
+            sender = sender_id
+            msg_id = message['id']
+
+            try:
+                process_message(cmd, text, txt, to, sender, message, msg_id)
+            except Exception as e:
+                print('Error :', e)
+                print(traceback.format_exc())
+    except Exception as e:
+        print('Error :', e)
+        print(traceback.format_exc())
+        sys.exit('Good Bye!!')
+
+if __name__ == '__main__':
+    while True:
+        check_m()
